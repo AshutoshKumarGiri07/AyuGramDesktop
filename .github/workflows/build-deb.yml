@@ -181,77 +181,14 @@ jobs:
           body: |
             Automated Linux Debian package build for AyuGram Desktop.
 
-            - **Release Tag:** `${{ steps.version.outputs.tag }}`
-            - **Package File:** `${{ steps.package.outputs.pkg_file }}`
-            - **Built on:** `${{ steps.version.outputs.date_str }}`
+            Release Tag: ${{ steps.version.outputs.tag }}
+            Package File: ${{ steps.package.outputs.pkg_file }}
+            Built on: ${{ steps.version.outputs.date_str }}
           files: ${{ steps.package.outputs.pkg_file }}
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          path: out
-          key: cmake-out-${{ runner.os }}-${{ hashFiles('Telegram/CMakeLists.txt', 'cmake/**') }}
-          restore-keys: |
-            cmake-out-${{ runner.os }}-
-
-      - name: Configure ccache for max speed
-        run: |
-          mkdir -p ~/.ccache
-          cat > ~/.ccache/ccache.conf << 'EOF'
-          max_size = 4G
-          compression = true
-          compression_level = 1
-          hash_dir = false
-          sloppiness = file_macro,time_macros,include_file_mtime,include_file_ctime,pch_defines
-          EOF
-
-      - name: Pull Docker image & Build AyuGram
-        env:
-          TDESKTOP_API_ID: ${{ secrets.TDESKTOP_API_ID }}
-          TDESKTOP_API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
-        run: |
-          API_ID="${TDESKTOP_API_ID:-2040}"
-          API_HASH="${TDESKTOP_API_HASH:-b18441a1ff607e10a989891a5462e627}"
-          NPROC=$(nproc)
-
-          docker pull ghcr.io/telegramdesktop/tdesktop/centos_env:latest
-          docker run --rm \
-            -u "$(id -u):$(id -g)" \
-            -v "$PWD:/usr/src/tdesktop" \
-            -v "$HOME/.ccache:/tmp/.ccache" \
-            -e CONFIG=Release \
-            -e CCACHE_DIR=/tmp/.ccache \
-            -e CCACHE_MAXSIZE=4G \
-            -e CCACHE_SLOPPINESS=file_macro,time_macros,include_file_mtime,include_file_ctime,pch_defines \
-            -e CCACHE_COMPRESS=1 \
-            -e CCACHE_COMPRESSLEVEL=1 \
-            -e CMAKE_BUILD_PARALLEL_LEVEL="$NPROC" \
-            -e MAKEFLAGS="-j$NPROC" \
-            ghcr.io/telegramdesktop/tdesktop/centos_env:latest \
-            /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
-            -D TDESKTOP_API_ID="$API_ID" \
-            -D TDESKTOP_API_HASH="$API_HASH" \
-            -D CMAKE_CXX_FLAGS="-Wno-error"
-
-      - name: Generate Version Timestamp & Tag
-        id: version
-        run: |
-          TIMESTAMP=$(date +'%Y.%m.%d-%H%M')
-          DEB_VERSION=$(date +'%Y.%m.%d.%H%M')
-          echo "tag=v${TIMESTAMP}" >> $GITHUB_OUTPUT
-          echo "deb_version=${DEB_VERSION}" >> $GITHUB_OUTPUT
-          echo "date_str=$(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
-
-      - name: Create Debian (.deb) Package
-        id: package
-        run: |
-          VERSION="${{ steps.version.outputs.deb_version }}"
-          PKG_NAME="ayugram-desktop_${VERSION}_amd64"
-          PKG_DIR="build_deb/${PKG_NAME}"
-
-          mkdir -p "${PKG_DIR}/DEBIAN"
-          mkdir -p "${PKG_DIR}/usr/bin"
-          mkdir -p "${PKG_DIR}/usr/share/applications"
-          mkdir -p "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}x512/apps"
 
           BIN_PATH=""
           for candidate in out/Release/AyuGram out/Release/Telegram out/AyuGram out/Telegram out/Release/ayugram-desktop; do
