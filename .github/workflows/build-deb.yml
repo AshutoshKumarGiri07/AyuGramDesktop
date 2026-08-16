@@ -19,19 +19,33 @@ jobs:
     timeout-minutes: 180
 
     steps:
-      - name: Checkout (shallow + submodules)
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 1
           filter: blob:none
 
-      - name: Cache Docker image
-        id: docker-cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/docker-image.tar
-          key: docker-centos-env-${{ hashFiles('.github/workflows/build-deb.yml') }}
+      - name: Fast Parallel Submodules & Docker Pull
+        run: |
+          # Configure Docker for 20 concurrent layer downloads
+          sudo bash -c 'cat > /etc/docker/daemon.json <<EOF
+          {
+            "max-concurrent-downloads": 20,
+            "max-concurrent-uploads": 20
+          }
+          EOF'
+          sudo systemctl restart docker
+
+          # Start Docker pull in background
+          docker pull ghcr.io/telegramdesktop/tdesktop/centos_env:latest &
+          DOCKER_PID=$!
+
+          # Parallel fetch 35+ submodules (shallow, 8 concurrent jobs)
+          git submodule update --init --recursive --depth=1 --recommend-shallow --jobs 8
+
+          # Wait for Docker pull
+          wait $DOCKER_PID
+          echo "All submodules and Docker environment ready!"
 
       - name: Cache ccache objects
         uses: actions/cache@v4
@@ -49,18 +63,6 @@ jobs:
           key: cmake-out-${{ runner.os }}-${{ hashFiles('Telegram/CMakeLists.txt', 'cmake/**') }}
           restore-keys: |
             cmake-out-${{ runner.os }}-
-
-      - name: Load or pull Docker image
-        run: |
-          IMAGE="ghcr.io/telegramdesktop/tdesktop/centos_env:latest"
-          if [ -f /tmp/docker-image.tar ]; then
-            echo "Loading cached Docker image..."
-            docker load < /tmp/docker-image.tar
-          else
-            echo "Pulling Docker image..."
-            docker pull "$IMAGE"
-            docker save "$IMAGE" > /tmp/docker-image.tar
-          fi
 
       - name: Configure ccache & Build
         env:
