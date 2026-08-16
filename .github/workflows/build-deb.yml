@@ -59,7 +59,7 @@ jobs:
           sloppiness = file_macro,time_macros,include_file_mtime,include_file_ctime,pch_defines
           EOF
 
-      - name: Pull Docker image & Build AyuGram
+      - name: Pull Docker image & Build Ashu
         env:
           TDESKTOP_API_ID: ${{ secrets.TDESKTOP_API_ID }}
           TDESKTOP_API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
@@ -109,9 +109,11 @@ jobs:
 
       - name: Create Debian (.deb) Package
         id: package
+        env:
+          PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
         run: |
           VERSION="${{ steps.version.outputs.deb_version }}"
-          PKG_NAME="ayugram-desktop_${VERSION}_amd64"
+          PKG_NAME="ashu-desktop_${VERSION}_amd64"
           PKG_DIR="build_deb/${PKG_NAME}"
 
           mkdir -p "${PKG_DIR}/DEBIAN"
@@ -120,7 +122,7 @@ jobs:
           mkdir -p "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps"
 
           BIN_PATH=""
-          for candidate in out/Release/AyuGram out/Release/Telegram out/AyuGram out/Telegram out/Release/ayugram-desktop; do
+          for candidate in out/Release/AyuGram out/Release/Telegram out/AyuGram out/Telegram out/Release/ashu-desktop; do
             if [ -f "$candidate" ]; then
               BIN_PATH="$candidate"
               break
@@ -138,29 +140,47 @@ jobs:
 
           echo "Found compiled binary: ${BIN_PATH}"
           strip "$BIN_PATH" || true
-          cp "$BIN_PATH" "${PKG_DIR}/usr/bin/ayugram-desktop"
-          chmod +x "${PKG_DIR}/usr/bin/ayugram-desktop"
+          cp "$BIN_PATH" "${PKG_DIR}/usr/bin/ashu-desktop"
+          chmod +x "${PKG_DIR}/usr/bin/ashu-desktop"
+
+          cat > "${PKG_DIR}/DEBIAN/postinst" << SCRIPT
+          #!/bin/bash
+          APT_SOURCE="/etc/apt/sources.list.d/ashu-desktop.list"
+          echo "deb [trusted=yes] ${PAGES_URL}/apt ./" > "\$APT_SOURCE"
+          echo ""
+          echo "Ashu Desktop installed!"
+          echo "APT source added. Updates via: sudo apt update && sudo apt upgrade"
+          echo ""
+          SCRIPT
+          chmod 755 "${PKG_DIR}/DEBIAN/postinst"
+
+          cat > "${PKG_DIR}/DEBIAN/prerm" << 'SCRIPT'
+          #!/bin/bash
+          rm -f /etc/apt/sources.list.d/ashu-desktop.list
+          SCRIPT
+          chmod 755 "${PKG_DIR}/DEBIAN/prerm"
 
           if [ -f "lib/xdg/com.ayugram.desktop.desktop" ]; then
-            cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
-            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ayugram-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
-            sed -i 's|TryExec=AyuGram|TryExec=ayugram-desktop|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+            cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
+            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
+            sed -i 's|TryExec=AyuGram|TryExec=ashu-desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
           fi
 
           if [ -f "Telegram/Resources/art/icon512.png" ]; then
-            cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ayugram.desktop.png"
+            cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ashu.desktop.png"
           fi
 
           {
-            echo "Package: ayugram-desktop"
+            echo "Package: ashu-desktop"
             echo "Version: ${VERSION}"
             echo "Architecture: amd64"
-            echo "Maintainer: AyuGram Team <support@ayugram.one>"
+            echo "Maintainer: Ashu <support@ashu.dev>"
             echo "Section: net"
             echo "Priority: optional"
             echo "Depends: libc6 (>= 2.34), libgcc-s1, libstdc++6, libxcb1, libx11-6, libgl1, libglib2.0-0"
-            echo "Description: AyuGram Desktop client for Linux"
-            echo " Desktop version of AyuGram - feature-packed Telegram client."
+            echo "Description: Ashu Desktop client for Linux"
+            echo " Desktop version of Ashu - feature-packed Telegram client."
+            echo " Auto-updates via APT (GitHub Pages repository)."
           } > "${PKG_DIR}/DEBIAN/control"
 
           dpkg-deb --build --root-owner-group "${PKG_DIR}"
@@ -177,86 +197,45 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: AyuGram Desktop Debian Build (${{ steps.version.outputs.date_str }})
+          name: Ashu Desktop Debian Build (${{ steps.version.outputs.date_str }})
           body: |
-            Automated Linux Debian package build for AyuGram Desktop.
-
-            Release Tag: ${{ steps.version.outputs.tag }}
-            Package File: ${{ steps.package.outputs.pkg_file }}
-            Built on: ${{ steps.version.outputs.date_str }}
-          files: ${{ steps.package.outputs.pkg_file }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}x512/apps"
-
-          BIN_PATH=""
-          for candidate in out/Release/AyuGram out/Release/Telegram out/AyuGram out/Telegram out/Release/ayugram-desktop; do
-            if [ -f "$candidate" ]; then
-              BIN_PATH="$candidate"
-              break
-            fi
-          done
-
-          if [ -z "$BIN_PATH" ]; then
-            BIN_PATH=$(find out -type f \( -name "AyuGram" -o -name "Telegram" \) | head -n 1)
-          fi
-
-          if [ -z "$BIN_PATH" ] || [ ! -f "$BIN_PATH" ]; then
-            echo "Error: Compiled binary not found in out/"
-            exit 1
-          fi
-
-          echo "Found compiled binary: ${BIN_PATH}"
-          strip "$BIN_PATH" || true
-          cp "$BIN_PATH" "${PKG_DIR}/usr/bin/ayugram-desktop"
-          chmod +x "${PKG_DIR}/usr/bin/ayugram-desktop"
-
-          if [ -f "lib/xdg/com.ayugram.desktop.desktop" ]; then
-            cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
-            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ayugram-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
-            sed -i 's|TryExec=AyuGram|TryExec=ayugram-desktop|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
-          fi
-
-          if [ -f "Telegram/Resources/art/icon512.png" ]; then
-            cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ayugram.desktop.png"
-          fi
-
-          {
-            echo "Package: ayugram-desktop"
-            echo "Version: ${VERSION}"
-            echo "Architecture: amd64"
-            echo "Maintainer: AyuGram Team <support@ayugram.one>"
-            echo "Section: net"
-            echo "Priority: optional"
-            echo "Depends: libc6 (>= 2.34), libgcc-s1, libstdc++6, libxcb1, libx11-6, libgl1, libglib2.0-0"
-            echo "Description: AyuGram Desktop client for Linux"
-            echo " Desktop version of AyuGram - feature-packed Telegram client."
-          } > "${PKG_DIR}/DEBIAN/control"
-
-          dpkg-deb --build --root-owner-group "${PKG_DIR}"
-          mv "build_deb/${PKG_NAME}.deb" "./${PKG_NAME}.deb"
-          echo "pkg_file=${PKG_NAME}.deb" >> $GITHUB_OUTPUT
-
-      - name: Upload .deb Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.package.outputs.pkg_file }}
-          path: ${{ steps.package.outputs.pkg_file }}
-
-      - name: Create GitHub Release & Upload .deb
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: AyuGram Desktop Debian Build (${{ steps.version.outputs.date_str }})
-          body: |
-            Automated Linux Debian package build for AyuGram Desktop.
+            Automated Linux Debian package build for Ashu Desktop.
 
             - **Release Tag:** `${{ steps.version.outputs.tag }}`
             - **Package File:** `${{ steps.package.outputs.pkg_file }}`
             - **Built on:** `${{ steps.version.outputs.date_str }}`
+
+            ### Install & Auto-Update
+            ```bash
+            sudo dpkg -i ${{ steps.package.outputs.pkg_file }}
+            ```
+            After install, updates come through APT:
+            ```bash
+            sudo apt update && sudo apt upgrade
+            ```
           files: ${{ steps.package.outputs.pkg_file }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build APT Repository & Deploy to GitHub Pages
+        run: |
+          sudo apt-get install -y dpkg-dev
+
+          mkdir -p apt-repo
+          cp "${{ steps.package.outputs.pkg_file }}" apt-repo/
+
+          cd apt-repo
+          dpkg-scanpackages --multiversion . /dev/null > Packages
+          gzip -k -f Packages
+
+          apt-ftparchive release . > Release
+
+      - name: Deploy APT repo to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./apt-repo
+          destination_dir: apt
+          keep_files: false
