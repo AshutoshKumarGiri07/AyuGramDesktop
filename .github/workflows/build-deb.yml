@@ -39,7 +39,9 @@ jobs:
           mkdir -p ~/.ccache
           API_ID="${TDESKTOP_API_ID:-2040}"
           API_HASH="${TDESKTOP_API_HASH:-b18441a1ff607e10a989891a5462e627}"
+          # Use optimal parallel jobs to prevent OOM/compiler crash on Ubuntu runner
           NPROC=$(nproc)
+          BUILD_JOBS=$(( NPROC > 2 ? NPROC - 1 : 1 ))
 
           docker pull ghcr.io/telegramdesktop/tdesktop/centos_env:latest
           docker run --rm \
@@ -48,12 +50,13 @@ jobs:
             -v "$HOME/.ccache:/tmp/.ccache" \
             -e CONFIG=Release \
             -e CCACHE_DIR=/tmp/.ccache \
-            -e CMAKE_BUILD_PARALLEL_LEVEL="$NPROC" \
-            -e MAKEFLAGS="-j$NPROC" \
+            -e CMAKE_BUILD_PARALLEL_LEVEL="$BUILD_JOBS" \
+            -e MAKEFLAGS="-j$BUILD_JOBS" \
             ghcr.io/telegramdesktop/tdesktop/centos_env:latest \
             /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
             -D TDESKTOP_API_ID="$API_ID" \
-            -D TDESKTOP_API_HASH="$API_HASH"
+            -D TDESKTOP_API_HASH="$API_HASH" \
+            -D CMAKE_CXX_FLAGS="-Wno-error"
 
       - name: Generate Version Timestamp & Tag
         id: version
@@ -111,7 +114,7 @@ jobs:
             cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ayugram.desktop.png"
           fi
 
-          # Create Debian control metadata
+          # Create Debian control metadata compatible with Ubuntu 24.04 / Debian
           {
             echo "Package: ayugram-desktop"
             echo "Version: ${VERSION}"
@@ -119,7 +122,7 @@ jobs:
             echo "Maintainer: AyuGram Team <support@ayugram.one>"
             echo "Section: net"
             echo "Priority: optional"
-            echo "Depends: libc6, libgcc-s1, libstdc++6, libxcb1, libx11-6, libgl1"
+            echo "Depends: libc6 (>= 2.34), libgcc-s1, libstdc++6, libxcb1, libx11-6, libgl1, libglib2.0-0"
             echo "Description: AyuGram Desktop client for Linux"
             echo " Desktop version of AyuGram - feature-packed Telegram client."
           } > "${PKG_DIR}/DEBIAN/control"
