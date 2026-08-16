@@ -27,21 +27,37 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: ccache-${{ runner.os }}-${{ github.sha }}
+          key: ccache-release-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            ccache-${{ runner.os }}-
+            ccache-release-${{ runner.os }}-
 
-      - name: Pull Docker image & Build AyuGram (Parallel)
+      - name: Cache CMake build tree (incremental builds)
+        uses: actions/cache@v4
+        with:
+          path: out
+          key: cmake-out-${{ runner.os }}-${{ hashFiles('Telegram/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: |
+            cmake-out-${{ runner.os }}-
+
+      - name: Configure ccache for max speed
+        run: |
+          mkdir -p ~/.ccache
+          cat > ~/.ccache/ccache.conf << 'EOF'
+          max_size = 4G
+          compression = true
+          compression_level = 1
+          hash_dir = false
+          sloppiness = file_macro,time_macros,include_file_mtime,include_file_ctime,pch_defines
+          EOF
+
+      - name: Pull Docker image & Build AyuGram
         env:
           TDESKTOP_API_ID: ${{ secrets.TDESKTOP_API_ID }}
           TDESKTOP_API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
         run: |
-          mkdir -p ~/.ccache
           API_ID="${TDESKTOP_API_ID:-2040}"
           API_HASH="${TDESKTOP_API_HASH:-b18441a1ff607e10a989891a5462e627}"
-          # Use optimal parallel jobs to prevent OOM/compiler crash on Ubuntu runner
           NPROC=$(nproc)
-          BUILD_JOBS=$(( NPROC > 2 ? NPROC - 1 : 1 ))
 
           docker pull ghcr.io/telegramdesktop/tdesktop/centos_env:latest
           docker run --rm \
@@ -50,8 +66,12 @@ jobs:
             -v "$HOME/.ccache:/tmp/.ccache" \
             -e CONFIG=Release \
             -e CCACHE_DIR=/tmp/.ccache \
-            -e CMAKE_BUILD_PARALLEL_LEVEL="$BUILD_JOBS" \
-            -e MAKEFLAGS="-j$BUILD_JOBS" \
+            -e CCACHE_MAXSIZE=4G \
+            -e CCACHE_SLOPPINESS=file_macro,time_macros,include_file_mtime,include_file_ctime,pch_defines \
+            -e CCACHE_COMPRESS=1 \
+            -e CCACHE_COMPRESSLEVEL=1 \
+            -e CMAKE_BUILD_PARALLEL_LEVEL="$NPROC" \
+            -e MAKEFLAGS="-j$NPROC" \
             ghcr.io/telegramdesktop/tdesktop/centos_env:latest \
             /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
             -D TDESKTOP_API_ID="$API_ID" \
@@ -79,7 +99,6 @@ jobs:
           mkdir -p "${PKG_DIR}/usr/share/applications"
           mkdir -p "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps"
 
-          # Locate compiled executable binary
           BIN_PATH=""
           for candidate in out/Release/AyuGram out/Release/Telegram out/AyuGram out/Telegram out/Release/ayugram-desktop; do
             if [ -f "$candidate" ]; then
@@ -102,19 +121,16 @@ jobs:
           cp "$BIN_PATH" "${PKG_DIR}/usr/bin/ayugram-desktop"
           chmod +x "${PKG_DIR}/usr/bin/ayugram-desktop"
 
-          # Copy desktop launcher
           if [ -f "lib/xdg/com.ayugram.desktop.desktop" ]; then
             cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
             sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ayugram-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
             sed -i 's|TryExec=AyuGram|TryExec=ayugram-desktop|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
           fi
 
-          # Copy icon
           if [ -f "Telegram/Resources/art/icon512.png" ]; then
             cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ayugram.desktop.png"
           fi
 
-          # Create Debian control metadata compatible with Ubuntu 24.04 / Debian
           {
             echo "Package: ayugram-desktop"
             echo "Version: ${VERSION}"
