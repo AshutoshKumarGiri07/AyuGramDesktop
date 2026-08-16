@@ -1,0 +1,144 @@
+name: Build Debian Package & Create Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - dev
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-debian:
+    name: Build Linux Debian Package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build host tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-poetry dpkg-dev
+
+      - name: Prepare build libraries
+        run: |
+          chmod +x ./Telegram/build/prepare/linux.sh
+          ./Telegram/build/prepare/linux.sh
+
+      - name: Build AyuGram inside Docker container
+        env:
+          TDESKTOP_API_ID: ${{ secrets.TDESKTOP_API_ID }}
+          TDESKTOP_API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
+        run: |
+          API_ID="${TDESKTOP_API_ID:-2040}"
+          API_HASH="${TDESKTOP_API_HASH:-b18441a1ff607e10a989891a5462e627}"
+          docker run --rm \
+            -v "$PWD:/usr/src/tdesktop" \
+            -e CONFIG=Release \
+            ghcr.io/telegramdesktop/tdesktop/centos_env:latest \
+            /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
+            -D TDESKTOP_API_ID="$API_ID" \
+            -D TDESKTOP_API_HASH="$API_HASH"
+
+      - name: Generate Version Timestamp & Tag
+        id: version
+        run: |
+          TIMESTAMP=$(date +'%Y.%m.%d-%H%M')
+          DEB_VERSION=$(date +'%Y.%m.%d.%H%M')
+          echo "tag=v${TIMESTAMP}" >> $GITHUB_OUTPUT
+          echo "deb_version=${DEB_VERSION}" >> $GITHUB_OUTPUT
+          echo "date_str=$(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+
+      - name: Create Debian (.deb) Package
+        id: package
+        run: |
+          VERSION="${{ steps.version.outputs.deb_version }}"
+          PKG_NAME="ayugram-desktop_${VERSION}_amd64"
+          PKG_DIR="build_deb/${PKG_NAME}"
+
+          mkdir -p "${PKG_DIR}/DEBIAN"
+          mkdir -p "${PKG_DIR}/usr/bin"
+          mkdir -p "${PKG_DIR}/usr/share/applications"
+          mkdir -p "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps"
+
+          # Locate the compiled executable binary
+          BIN_PATH=""
+          for candidate in out/Release/AyuGram out/Release/Telegram out/AyuGram out/Telegram out/Release/ayugram-desktop; do
+            if [ -f "$candidate" ]; then
+              BIN_PATH="$candidate"
+              break
+            fi
+          done
+
+          if [ -z "$BIN_PATH" ]; then
+            BIN_PATH=$(find out -type f \( -name "AyuGram" -o -name "Telegram" \) | head -n 1)
+          fi
+
+          if [ -z "$BIN_PATH" ] || [ ! -f "$BIN_PATH" ]; then
+            echo "Error: Compiled binary not found in out/"
+            exit 1
+          fi
+
+          echo "Found compiled binary: ${BIN_PATH}"
+          strip "$BIN_PATH" || true
+          cp "$BIN_PATH" "${PKG_DIR}/usr/bin/ayugram-desktop"
+          chmod +x "${PKG_DIR}/usr/bin/ayugram-desktop"
+
+          # Copy desktop launcher
+          if [ -f "lib/xdg/com.ayugram.desktop.desktop" ]; then
+            cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ayugram-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+            sed -i 's|TryExec=AyuGram|TryExec=ayugram-desktop|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+          fi
+
+          # Copy icon
+          if [ -f "Telegram/Resources/art/icon512.png" ]; then
+            cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ayugram.desktop.png"
+          fi
+
+          # Create Debian control metadata
+          {
+            echo "Package: ayugram-desktop"
+            echo "Version: ${VERSION}"
+            echo "Architecture: amd64"
+            echo "Maintainer: AyuGram Team <support@ayugram.one>"
+            echo "Section: net"
+            echo "Priority: optional"
+            echo "Depends: libc6, libgcc-s1, libstdc++6, libxcb1, libx11-6, libgl1"
+            echo "Description: AyuGram Desktop client for Linux"
+            echo " Desktop version of AyuGram - feature-packed Telegram client."
+          } > "${PKG_DIR}/DEBIAN/control"
+
+          dpkg-deb --build --root-owner-group "${PKG_DIR}"
+          mv "build_deb/${PKG_NAME}.deb" "./${PKG_NAME}.deb"
+          echo "pkg_file=${PKG_NAME}.deb" >> $GITHUB_OUTPUT
+
+      - name: Upload .deb Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.pkg_file }}
+          path: ${{ steps.package.outputs.pkg_file }}
+
+      - name: Create GitHub Release & Upload .deb
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: AyuGram Desktop Debian Build (${{ steps.version.outputs.date_str }})
+          body: |
+            Automated Linux Debian package build for AyuGram Desktop.
+
+            - **Release Tag:** `${{ steps.version.outputs.tag }}`
+            - **Package File:** `${{ steps.package.outputs.pkg_file }}`
+            - **Built on:** `${{ steps.version.outputs.date_str }}`
+          files: ${{ steps.package.outputs.pkg_file }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
