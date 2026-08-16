@@ -1,0 +1,16 @@
+Package: ashu-desktop
+Version: 2026.08.16.1459
+Architecture: amd64
+Maintainer: Ashu <support@ashu.dev>
+Depends: libc6 (>= 2.34), libgcc-s1, libstdc++6, libxcb1, libx11-6, libgl1, libglib2.0-0
+Filename: ./ashu-desktop_2026.08.16.1459_amd64.deb
+Size: 82808946
+MD5sum: 456f001b47b1e3efa3feda8a1773fcb2
+SHA1: 33a1e33edf7b04e561e3610a283c3045a0ceb9c3
+SHA256: 4ac94340c7243c204bd24910aa673b942e6f2360053929d86e9b6b8a7a4ad4e7
+Section: net
+Priority: optional
+Description: Ashu Desktop client for Linux
+ Desktop version of Ashu - feature-packed Telegram client.
+ Auto-updates via APT (GitHub Pages repository).
+
