@@ -43,10 +43,11 @@ jobs:
 
           docker pull ghcr.io/telegramdesktop/tdesktop/centos_env:latest
           docker run --rm \
+            -u "$(id -u):$(id -g)" \
             -v "$PWD:/usr/src/tdesktop" \
-            -v "$HOME/.ccache:/root/.ccache" \
+            -v "$HOME/.ccache:/tmp/.ccache" \
             -e CONFIG=Release \
-            -e CCACHE_DIR=/root/.ccache \
+            -e CCACHE_DIR=/tmp/.ccache \
             -e CMAKE_BUILD_PARALLEL_LEVEL="$NPROC" \
             -e MAKEFLAGS="-j$NPROC" \
             ghcr.io/telegramdesktop/tdesktop/centos_env:latest \
