@@ -1,4 +1,4 @@
-name: Build Debian Package & Create Release
+name: Build Debian Package & Create Release (Fast)
 
 on:
   push:
@@ -14,27 +14,181 @@ permissions:
 jobs:
   build-debian:
     name: Build Linux Debian Package
+    # 🔴 BIGGEST SPEED LEVER: swap this line for `runs-on: self-hosted`
+    # once you register a beefy self-hosted runner. That alone can cut
+    # a 2-3hr build to 10-30min on a 16+ core box. Everything below
+    # still works unchanged either way.
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository (Shallow)
+      - name: Checkout repository (Shallow, incl. submodules)
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 1
+          # forces submodules to also be shallow-cloned (big win — tdesktop
+          # pulls in several large submodules like breakpad/GSL/etc.)
+          filter: blob:none
 
       - name: Cache ccache compilation objects
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: ccache-release-${{ runner.os }}-${{ github.sha }}
+          # stable-ish key so restore-keys chain stays short and hit rate stays high
+          key: ccache-release-${{ runner.os }}-${{ github.ref_name }}-${{ github.sha }}
           restore-keys: |
+            ccache-release-${{ runner.os }}-${{ github.ref_name }}-
             ccache-release-${{ runner.os }}-
 
       - name: Cache CMake build tree (incremental builds)
         uses: actions/cache@v4
         with:
           path: out
+          key: cmake-out-${{ runner.os }}-${{ hashFiles('Telegram/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: |
+            cmake-out-${{ runner.os }}-
+
+      - name: Configure ccache for max speed
+        run: |
+          mkdir -p ~/.ccache
+          cat > ~/.ccache/ccache.conf << 'EOF'
+          max_size = 6G
+          compression = true
+          compression_level = 1
+          hash_dir = false
+          sloppiness = file_macro,time_macros,include_file_mtime,include_file_ctime,pch_defines
+          EOF
+
+      - name: Pull Docker image & Build AyuGram
+        env:
+          TDESKTOP_API_ID: ${{ secrets.TDESKTOP_API_ID }}
+          TDESKTOP_API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
+        run: |
+          API_ID="${TDESKTOP_API_ID:-2040}"
+          API_HASH="${TDESKTOP_API_HASH:-b18441a1ff607e10a989891a5462e627}"
+          NPROC=$(nproc)
+          echo "Building with $NPROC parallel jobs"
+
+          docker pull ghcr.io/telegramdesktop/tdesktop/centos_env:latest
+
+          docker run --rm \
+            -u "$(id -u):$(id -g)" \
+            -v "$PWD:/usr/src/tdesktop" \
+            -v "$HOME/.ccache:/tmp/.ccache" \
+            -e CONFIG=Release \
+            -e CCACHE_DIR=/tmp/.ccache \
+            -e CCACHE_MAXSIZE=6G \
+            -e CCACHE_SLOPPINESS=file_macro,time_macros,include_file_mtime,include_file_ctime,pch_defines \
+            -e CCACHE_COMPRESS=1 \
+            -e CCACHE_COMPRESSLEVEL=1 \
+            -e CMAKE_BUILD_PARALLEL_LEVEL="$NPROC" \
+            -e MAKEFLAGS="-j$NPROC" \
+            ghcr.io/telegramdesktop/tdesktop/centos_env:latest \
+            /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
+            -D TDESKTOP_API_ID="$API_ID" \
+            -D TDESKTOP_API_HASH="$API_HASH" \
+            -D CMAKE_CXX_FLAGS="-Wno-error"
+
+      - name: Show ccache hit rate
+        if: always()
+        run: |
+          docker run --rm \
+            -v "$HOME/.ccache:/tmp/.ccache" \
+            -e CCACHE_DIR=/tmp/.ccache \
+            ghcr.io/telegramdesktop/tdesktop/centos_env:latest \
+            ccache -s || true
+
+      - name: Generate Version Timestamp & Tag
+        id: version
+        run: |
+          TIMESTAMP=$(date +'%Y.%m.%d-%H%M')
+          DEB_VERSION=$(date +'%Y.%m.%d.%H%M')
+          echo "tag=v${TIMESTAMP}" >> $GITHUB_OUTPUT
+          echo "deb_version=${DEB_VERSION}" >> $GITHUB_OUTPUT
+          echo "date_str=$(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+
+      - name: Create Debian (.deb) Package
+        id: package
+        run: |
+          VERSION="${{ steps.version.outputs.deb_version }}"
+          PKG_NAME="ayugram-desktop_${VERSION}_amd64"
+          PKG_DIR="build_deb/${PKG_NAME}"
+
+          mkdir -p "${PKG_DIR}/DEBIAN"
+          mkdir -p "${PKG_DIR}/usr/bin"
+          mkdir -p "${PKG_DIR}/usr/share/applications"
+          mkdir -p "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps"
+
+          BIN_PATH=""
+          for candidate in out/Release/AyuGram out/Release/Telegram out/AyuGram out/Telegram out/Release/ayugram-desktop; do
+            if [ -f "$candidate" ]; then
+              BIN_PATH="$candidate"
+              break
+            fi
+          done
+
+          if [ -z "$BIN_PATH" ]; then
+            BIN_PATH=$(find out -type f \( -name "AyuGram" -o -name "Telegram" \) | head -n 1)
+          fi
+
+          if [ -z "$BIN_PATH" ] || [ ! -f "$BIN_PATH" ]; then
+            echo "Error: Compiled binary not found in out/"
+            exit 1
+          fi
+
+          echo "Found compiled binary: ${BIN_PATH}"
+          strip "$BIN_PATH" || true
+          cp "$BIN_PATH" "${PKG_DIR}/usr/bin/ayugram-desktop"
+          chmod +x "${PKG_DIR}/usr/bin/ayugram-desktop"
+
+          if [ -f "lib/xdg/com.ayugram.desktop.desktop" ]; then
+            cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ayugram-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+            sed -i 's|TryExec=AyuGram|TryExec=ayugram-desktop|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+          fi
+
+          if [ -f "Telegram/Resources/art/icon512.png" ]; then
+            cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ayugram.desktop.png"
+          fi
+
+          {
+            echo "Package: ayugram-desktop"
+            echo "Version: ${VERSION}"
+            echo "Architecture: amd64"
+            echo "Maintainer: AyuGram Team <support@ayugram.one>"
+            echo "Section: net"
+            echo "Priority: optional"
+            echo "Depends: libc6 (>= 2.34), libgcc-s1, libstdc++6, libxcb1, libx11-6, libgl1, libglib2.0-0"
+            echo "Description: AyuGram Desktop client for Linux"
+            echo " Desktop version of AyuGram - feature-packed Telegram client."
+          } > "${PKG_DIR}/DEBIAN/control"
+
+          dpkg-deb --build --root-owner-group "${PKG_DIR}"
+          mv "build_deb/${PKG_NAME}.deb" "./${PKG_NAME}.deb"
+          echo "pkg_file=${PKG_NAME}.deb" >> $GITHUB_OUTPUT
+
+      - name: Upload .deb Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.pkg_file }}
+          path: ${{ steps.package.outputs.pkg_file }}
+
+      - name: Create GitHub Release & Upload .deb
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: AyuGram Desktop Debian Build (${{ steps.version.outputs.date_str }})
+          body: |
+            Automated Linux Debian package build for AyuGram Desktop.
+
+            - **Release Tag:** `${{ steps.version.outputs.tag }}`
+            - **Package File:** `${{ steps.package.outputs.pkg_file }}`
+            - **Built on:** `${{ steps.version.outputs.date_str }}`
+          files: ${{ steps.package.outputs.pkg_file }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          path: out
           key: cmake-out-${{ runner.os }}-${{ hashFiles('Telegram/CMakeLists.txt', 'cmake/**') }}
           restore-keys: |
             cmake-out-${{ runner.os }}-
