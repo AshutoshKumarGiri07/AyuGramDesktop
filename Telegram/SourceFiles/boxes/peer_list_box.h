@@ -89,11 +89,11 @@ public:
 
 		return _peer;
 	}
-	// AyuGram
+	// Ashu
 	void setPeer(not_null<PeerData*> peer) {
 		_peer = peer;
 	}
-	// AyuGram
+	// Ashu
 
 	[[nodiscard]] PeerListRowId id() const {
 		return _id;

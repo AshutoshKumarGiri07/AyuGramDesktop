@@ -66,7 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QJsonDocument>
 #include <QtGui/QGuiApplication>
 
-// AyuGram includes
+// Ashu includes
 #include "ayu/ui/settings/settings_main.h"
 #include "settings/settings_builder.h"
 

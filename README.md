@@ -1,6 +1,6 @@
-# AyuGram
+# Ashugram
 
-![AyuGram Logo](.github/AyuGram.png) ![AyuChan](.github/AyuChan.png)
+![Ashugram Logo](.github/AyuGram.png) ![AyuChan](.github/AyuChan.png)
 
 [ English  |   [Русский](README-RU.md) ]
 
@@ -16,7 +16,7 @@
 - Media preview & quick reaction on force click (macOS)
 - Enhanced appearance
 
-And many more. Check out our [Documentation](https://docs.ayugram.one/desktop/).
+And many more. Check out our [Documentation](https://docs.ashugram.one/desktop/).
 
 <h3>
   <details>
@@ -24,7 +24,7 @@ And many more. Check out our [Documentation](https://docs.ayugram.one/desktop/).
     <table>
       <tr>
         <td><img src='.github/demos/demo1.png' width='268' alt='Preferences'></td>
-        <td><img src='.github/demos/demo2.png' width='268' alt='AyuGram Options'></td>
+        <td><img src='.github/demos/demo2.png' width='268' alt='Ashugram Options'></td>
         <td><img src='.github/demos/demo3.png' width='268' alt='Message Filters'></td>
       </tr>
       <tr>
@@ -41,48 +41,48 @@ And many more. Check out our [Documentation](https://docs.ayugram.one/desktop/).
 
 #### Official
 
-You can download prebuilt Windows binary from [Releases tab](https://github.com/AyuGram/AyuGramDesktop/releases) or from
-the [Telegram channel](https://t.me/AyuGramReleases).
+You can download prebuilt Windows binary from [Releases tab](https://github.com/AshutoshKumarGiri07/AyuGramDesktop/releases) or from
+the [Telegram channel](https://t.me/AshugramReleases).
 
 #### Winget
 
 ```bash
-winget install RadolynLabs.AyuGramDesktop
+winget install AshutoshKumarGiri07.AshugramDesktop
 ```
 
 #### Scoop
 
 ```bash
 scoop bucket add extras
-scoop install ayugram
+scoop install ashugram
 ```
 
 #### Self-built
 
-Follow [official guide](https://github.com/AyuGram/AyuGramDesktop/blob/dev/docs/building-win-x64.md) if you want to
+Follow [official guide](https://github.com/AshutoshKumarGiri07/AyuGramDesktop/blob/dev/docs/building-win-x64.md) if you want to
 build by yourself.
 
 ### macOS
 
 #### Official
 
-You can download prebuilt macOS package from [Releases tab](https://github.com/AyuGram/AyuGramDesktop/releases).
+You can download prebuilt macOS package from [Releases tab](https://github.com/AshutoshKumarGiri07/AyuGramDesktop/releases).
 
 #### Homebrew
 
 ```bash
-brew install --cask ayugram
+brew install --cask ashugram
 ```
 
 ### Arch Linux
 
 #### From source (recommended)
 
-Install `ayugram-desktop` from [AUR](https://aur.archlinux.org/packages/ayugram-desktop).
+Install `ashugram-desktop` from [AUR](https://aur.archlinux.org/packages/ashugram-desktop).
 
 #### Prebuilt binaries
 
-Install `ayugram-desktop-bin` from [AUR](https://aur.archlinux.org/packages/ayugram-desktop-bin).
+Install `ashugram-desktop-bin` from [AUR](https://aur.archlinux.org/packages/ashugram-desktop-bin).
 
 Note: these binaries aren't officially maintained by us.
 
@@ -90,46 +90,46 @@ Note: these binaries aren't officially maintained by us.
 
 #### Flake (recommended)
 
-Install `ayugram-desktop` from [ndfined-crp/ayugram-desktop](https://github.com/ndfined-crp/ayugram-desktop)
+Install `ashugram-desktop` from [ndfined-crp/ashugram-desktop](https://github.com/ndfined-crp/ashugram-desktop)
 
 #### Nixpkgs
 
-Install `ayugram-desktop` from [nixpkgs](https://search.nixos.org/packages?channel=unstable&show=ayugram-desktop)
+Install `ashugram-desktop` from [nixpkgs](https://search.nixos.org/packages?channel=unstable&show=ashugram-desktop)
 
 ### ALT Linux
 
-[Sisyphus](https://packages.altlinux.org/en/sisyphus/srpms/ayugram-desktop/)
+[Sisyphus](https://packages.altlinux.org/en/sisyphus/srpms/ashugram-desktop/)
 
 ### Gentoo Linux
 
-See [this repository](https://codeberg.org/OverLessArtem/ayugram-ebuild-gentoo) for installation manual.
+See [this repository](https://codeberg.org/OverLessArtem/ashugram-ebuild-gentoo) for installation manual.
 
 ### Void Linux
-See [this repository](https://codeberg.org/OverLessArtem/ayugram-template-void) for installation manual.
+See [this repository](https://codeberg.org/OverLessArtem/ashugram-template-void) for installation manual.
 
 ### EPM
 
-`epm play ayugram`
+`epm play ashugram`
 
 ### Fedora
 
-From [RPM Fusion](https://admin.rpmfusion.org/pkgdb/package/free/ayugram-desktop/) repository.
+From [RPM Fusion](https://admin.rpmfusion.org/pkgdb/package/free/ashugram-desktop/) repository.
 
 ```bash
-dnf install ayugram-desktop
+dnf install ashugram-desktop
 ```
 
 ### Any other Linux distro
 
-Flatpak: https://github.com/0FL01/AyuGramDesktop-flatpak
+Flatpak: https://github.com/0FL01/AshugramDesktop-flatpak
 
-Or follow the [official guide](https://github.com/AyuGram/AyuGramDesktop/blob/dev/docs/building-linux.md).
+Or follow the [official guide](https://github.com/AshutoshKumarGiri07/AyuGramDesktop/blob/dev/docs/building-linux.md).
 
 ## Donation
 
-Enjoy using **AyuGram**? Consider sending us a tip!
+Enjoy using **Ashugram**? Consider sending us a tip!
 
-[Here's available methods.](https://docs.ayugram.one/donate/)
+[Here's available methods.](https://docs.ashugram.one/donate/)
 
 ## Credits
 

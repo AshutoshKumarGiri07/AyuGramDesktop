@@ -1,11 +1,11 @@
 [Desktop Entry]
-Name=AyuGram Desktop
-Comment=Desktop version of AyuGram - ToS breaking Telegram client
-TryExec=AyuGram
-Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U
-Icon=com.ayugram.desktop
+Name=Ashu Desktop
+Comment=Desktop version of Ashu - ToS breaking Telegram client
+TryExec=Ashu
+Exec=env DESKTOPINTEGRATION=1 Ashu -- %U
+Icon=com.ashu.desktop
 Terminal=false
-StartupWMClass=AyuGram
+StartupWMClass=Ashu
 Type=Application
 Categories=Chat;Network;InstantMessaging;Qt;
 MimeType=x-scheme-handler/tg;x-scheme-handler/tonsite;
@@ -17,6 +17,6 @@ X-GNOME-UsesNotifications=true
 X-GNOME-SingleWindow=true
 
 [Desktop Action quit]
-Exec=AyuGram -quit
-Name=Quit AyuGram
+Exec=Ashu -quit
+Name=Quit Ashu
 Icon=application-exit

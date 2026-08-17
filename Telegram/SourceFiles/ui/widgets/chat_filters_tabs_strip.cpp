@@ -41,7 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QScrollBar>
 
-// AyuGram includes
+// Ashu includes
 #include "ayu/ayu_settings.h"
 
 

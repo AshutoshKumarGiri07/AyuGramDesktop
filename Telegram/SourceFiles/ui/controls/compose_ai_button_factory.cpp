@@ -23,7 +23,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "styles/style_chat_helpers.h"
 
-// AyuGram includes
+// Ashu includes
 #include "ayu/ayu_settings.h"
 
 

@@ -18,7 +18,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history_unread_things.h"
 #include "apiwrap.h"
 
-// AyuGram includes
+// Ashu includes
 #include "ayu/ayu_settings.h"
 
 
