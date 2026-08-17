@@ -140,6 +140,8 @@ jobs:
           strip "$BIN_PATH" || true
           cp "$BIN_PATH" "${PKG_DIR}/usr/bin/ashu-desktop"
           chmod +x "${PKG_DIR}/usr/bin/ashu-desktop"
+          ln -sf ashu-desktop "${PKG_DIR}/usr/bin/ayugram-desktop"
+          ln -sf ashu-desktop "${PKG_DIR}/usr/bin/AyuGram"
 
           cat > "${PKG_DIR}/DEBIAN/postinst" << SCRIPT
           #!/bin/bash
@@ -149,23 +151,36 @@ jobs:
           echo "Ashu Desktop installed!"
           echo "APT source added. Updates via: sudo apt update && sudo apt upgrade"
           echo ""
+          which gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -f /usr/share/icons/hicolor || true
+          which update-desktop-database >/dev/null 2>&1 && update-desktop-database -q /usr/share/applications || true
           SCRIPT
           chmod 755 "${PKG_DIR}/DEBIAN/postinst"
 
           cat > "${PKG_DIR}/DEBIAN/prerm" << 'SCRIPT'
           #!/bin/bash
           rm -f /etc/apt/sources.list.d/ashu-desktop.list
+          which gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -f /usr/share/icons/hicolor || true
+          which update-desktop-database >/dev/null 2>&1 && update-desktop-database -q /usr/share/applications || true
           SCRIPT
           chmod 755 "${PKG_DIR}/DEBIAN/prerm"
 
           if [ -f "lib/xdg/com.ayugram.desktop.desktop" ]; then
+            # Install as com.ayugram.desktop.desktop
+            cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+            sed -i 's|TryExec=AyuGram|TryExec=ashu-desktop|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+
+            # Also install as com.ashu.desktop.desktop for ashu-desktop package compatibility
             cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
             sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
             sed -i 's|TryExec=AyuGram|TryExec=ashu-desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
+            sed -i 's|Icon=com.ayugram.desktop|Icon=com.ashu.desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
           fi
 
-          [ -f "Telegram/Resources/art/icon512.png" ] && \
+          if [ -f "Telegram/Resources/art/icon512.png" ]; then
+            cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ayugram.desktop.png"
             cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ashu.desktop.png"
+          fi
 
           {
             echo "Package: ashu-desktop"
