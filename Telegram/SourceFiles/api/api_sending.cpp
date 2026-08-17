@@ -35,7 +35,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "mainwidget.h"
 #include "apiwrap.h"
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/utils/telegram_helpers.h"
 
 

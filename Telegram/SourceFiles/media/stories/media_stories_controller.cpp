@@ -264,7 +264,7 @@ void Controller::Unsupported::setup(not_null<PeerData*> peer) {
 
 	_button = std::make_unique<Ui::RoundButton>(
 		wrap,
-		tr::ayu_UpdateAshu(),
+		tr::ayu_UpdateAyuGram(),
 		st::storiesUnsupportedUpdate);
 	_button->show();
 

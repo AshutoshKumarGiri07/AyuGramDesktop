@@ -20,7 +20,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_session.h"
 #include "main/main_session_settings.h"
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ayu_settings.h"
 
 

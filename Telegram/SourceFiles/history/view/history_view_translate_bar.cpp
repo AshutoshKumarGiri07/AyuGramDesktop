@@ -39,7 +39,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtGui/QtEvents>
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ayu_settings.h"
 
 

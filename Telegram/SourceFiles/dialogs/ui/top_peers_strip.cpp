@@ -24,7 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtWidgets/QApplication>
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ui/ayu_userpic.h"
 
 

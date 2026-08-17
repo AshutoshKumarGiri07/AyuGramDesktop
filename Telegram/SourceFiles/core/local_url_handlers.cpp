@@ -80,7 +80,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtGui/QGuiApplication>
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ayu_url_handlers.h"
 
 

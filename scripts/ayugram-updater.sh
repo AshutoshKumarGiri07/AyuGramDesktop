@@ -8,7 +8,7 @@ QUIET=false
 
 log() { $QUIET || echo "$@"; }
 
-INSTALLED_VERSION=$(dpkg-query -W -f='${Version}' ashugram-desktop 2>/dev/null || echo "0")
+INSTALLED_VERSION=$(dpkg-query -W -f='${Version}' ayugram-desktop 2>/dev/null || echo "0")
 log "Installed: $INSTALLED_VERSION"
 
 RESPONSE=$(curl -sf --max-time 30 "$GITHUB_API" 2>/dev/null) || {
@@ -40,16 +40,16 @@ if dpkg --compare-versions "$LATEST_VERSION" gt "$INSTALLED_VERSION" 2>/dev/null
     trap 'rm -rf "$TMPDIR"' EXIT
 
     log "Downloading: $DEB_URL"
-    curl -sfL --max-time 300 -o "$TMPDIR/ashugram.deb" "$DEB_URL" || {
+    curl -sfL --max-time 300 -o "$TMPDIR/ayugram.deb" "$DEB_URL" || {
         log "Download failed"
         exit 1
     }
 
     log "Installing update..."
     if [ "$(id -u)" -eq 0 ]; then
-        dpkg -i "$TMPDIR/ashugram.deb" || apt-get install -f -y
+        dpkg -i "$TMPDIR/ayugram.deb" || apt-get install -f -y
     else
-        sudo dpkg -i "$TMPDIR/ashugram.deb" || sudo apt-get install -f -y
+        sudo dpkg -i "$TMPDIR/ayugram.deb" || sudo apt-get install -f -y
     fi
 
     log "Updated to $LATEST_VERSION"

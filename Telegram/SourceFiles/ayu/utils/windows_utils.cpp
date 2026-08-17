@@ -1,4 +1,4 @@
-// This is the source code of Ashu for Desktop.
+// This is the source code of AyuGram for Desktop.
 //
 // We do not and cannot prevent the use of our code,
 // but be respectful and credit the original author.
@@ -47,9 +47,9 @@ void processIcon(QString shortcut, QString iconPath) {
 
 void processLegacy(const QString &iconPath) {
 	const auto appdata = QDir::fromNativeSeparators(qgetenv("APPDATA"));
-	auto shortcut = appdata + "/Microsoft/Internet Explorer/Quick Launch/User Pinned/TaskBar/Ashu Desktop.lnk";
+	auto shortcut = appdata + "/Microsoft/Internet Explorer/Quick Launch/User Pinned/TaskBar/AyuGram Desktop.lnk";
 	if (!QFile::exists(shortcut)) {
-		shortcut = appdata + "/Microsoft/Internet Explorer/Quick Launch/User Pinned/TaskBar/Ashu.lnk";
+		shortcut = appdata + "/Microsoft/Internet Explorer/Quick Launch/User Pinned/TaskBar/AyuGram.lnk";
 	}
 	if (!QFile::exists(shortcut)) {
 		return;
@@ -140,9 +140,9 @@ void processNewShortcuts(const QString &iconPath) {
 	}
 
 	const auto shortcuts = {
-		path + u"Ashu Desktop/Ashu.lnk"_q,
-		path + u"Ashu/Ashu.lnk"_q,
-		path + u"Ashu.lnk"_q,
+		path + u"AyuGram Desktop/AyuGram.lnk"_q,
+		path + u"AyuGram/AyuGram.lnk"_q,
+		path + u"AyuGram.lnk"_q,
 	};
 	for (const auto &shortcut : shortcuts) {
 		const auto native = QDir::toNativeSeparators(shortcut).toStdWString();

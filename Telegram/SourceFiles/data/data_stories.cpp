@@ -27,7 +27,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/layers/show.h"
 #include "ui/text/text_utilities.h"
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ayu_settings.h"
 
 

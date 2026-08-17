@@ -1,4 +1,4 @@
-// This is the source code of Ashu for Desktop.
+// This is the source code of AyuGram for Desktop.
 //
 // We do not and cannot prevent the use of our code,
 // but be respectful and credit the original author.
@@ -83,7 +83,7 @@ void AyuLanguage::loadCachedLanguage() {
 		QJsonParseError error{};
 		const auto doc = QJsonDocument::fromJson(data, &error);
 		if (error.error == QJsonParseError::NoError) {
-			LOG(("Loading cached Ashu language: %1").arg(finalLangPackId));
+			LOG(("Loading cached AyuGram language: %1").arg(finalLangPackId));
 			applyLanguageJson(doc);
 		}
 	}
@@ -98,7 +98,7 @@ void AyuLanguage::saveCachedLanguage(const QByteArray &json, const QString &lang
 	if (file.open(QIODevice::WriteOnly)) {
 		file.write(json);
 		file.close();
-		LOG(("Cached Ashu language: %1").arg(langId));
+		LOG(("Cached AyuGram language: %1").arg(langId));
 	}
 }
 
@@ -115,13 +115,13 @@ void AyuLanguage::fetchLanguage(const QString &id, const QString &baseId) {
 	}
 
 	// using `jsdelivr` since China (...and maybe other?) users have some problems with GitHub
-	// https://crowdin.com/project/ashugram/discussions/6
+	// https://crowdin.com/project/ayugram/discussions/6
 	QUrl url;
 	if (!finalLangPackId.isEmpty() && !baseId.isEmpty() && !needFallback) {
-		url.setUrl(qsl("https://cdn.jsdelivr.net/gh/AshutoshKumarGiri07/Languages@l10n_main/values/langs/%1/Shared.json").arg(
+		url.setUrl(qsl("https://cdn.jsdelivr.net/gh/AyuGram/Languages@l10n_main/values/langs/%1/Shared.json").arg(
 			finalLangPackId));
 	} else {
-		url.setUrl(qsl("https://cdn.jsdelivr.net/gh/AshutoshKumarGiri07/Languages@l10n_main/values/langs/%1/Shared.json").arg(
+		url.setUrl(qsl("https://cdn.jsdelivr.net/gh/AyuGram/Languages@l10n_main/values/langs/%1/Shared.json").arg(
 			needFallback ? baseId : finalLangPackId));
 	}
 	_chkReply = networkManager.get(QNetworkRequest(url));
@@ -137,7 +137,7 @@ void AyuLanguage::fetchFinished() {
 	auto statusCode = _chkReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 
 	if (statusCode == 404 && !langPackId.isEmpty() && !langPackBaseId.isEmpty() && !needFallback) {
-		LOG(("Ashu Language not found! Fallback to main language: %1...").arg(langPackBaseId));
+		LOG(("AyuGram Language not found! Fallback to main language: %1...").arg(langPackBaseId));
 		needFallback = true;
 		_chkReply->disconnect();
 		fetchLanguage("", langPackBaseId);
@@ -164,12 +164,12 @@ void AyuLanguage::fetchError(QNetworkReply::NetworkError e) {
 		const auto id = Lang::GetInstance().id();
 
 		if (!id.isEmpty() && !baseId.isEmpty() && !needFallback) {
-			LOG(("Ashu Language not found! Fallback to main language: %1...").arg(baseId));
+			LOG(("AyuGram Language not found! Fallback to main language: %1...").arg(baseId));
 			needFallback = true;
 			_chkReply->disconnect();
 			fetchLanguage("", baseId);
 		} else {
-			LOG(("Ashu Language not found!"));
+			LOG(("AyuGram Language not found!"));
 			_chkReply = nullptr;
 		}
 	}

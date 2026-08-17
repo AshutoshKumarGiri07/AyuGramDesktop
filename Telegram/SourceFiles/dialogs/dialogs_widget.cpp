@@ -107,7 +107,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QTextEdit>
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ayu_settings.h"
 #include "ayu/utils/telegram_helpers.h"
 #include "base/platform/base_platform_haptic.h"
@@ -1760,7 +1760,7 @@ void Widget::setupMainMenuToggle() {
 }
 
 void Widget::setupStories() {
-	// Ashu disableStories
+	// AyuGram disableStories
 	const auto &settings = AyuSettings::getInstance();
 	if (settings.disableStories()) {
 		return;
@@ -2600,7 +2600,7 @@ void Widget::checkUpdateStatus() {
 		}
 		_updateTelegram.create(
 			this,
-			tr::ayu_UpdateAshu(tr::now),
+			tr::ayu_UpdateAyuGram(tr::now),
 			st::dialogsUpdateButton,
 			st::dialogsInstallUpdate,
 			st::dialogsInstallUpdateOver,

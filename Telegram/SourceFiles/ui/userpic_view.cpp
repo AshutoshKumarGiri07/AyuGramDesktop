@@ -13,7 +13,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <cmath>
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ui/ayu_userpic.h"
 
 

@@ -15,7 +15,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_peer_values.h"
 #include "apiwrap.h"
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ayu_settings.h"
 
 
@@ -117,11 +117,11 @@ void SendProgressManager::send(const Key &key, int progress) {
 		return;
 	}
 
-	// Ashu sendUploadProgress
+	// AyuGram sendUploadProgress
 	const auto &ghost = AyuSettings::ghost(_session);
 	if (!ghost.sendUploadProgress())
 	{
-		DEBUG_LOG(("[Ashu] Don't send upload progress"));
+		DEBUG_LOG(("[AyuGram] Don't send upload progress"));
 		return;
 	}
 

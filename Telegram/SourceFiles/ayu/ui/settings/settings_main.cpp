@@ -1,4 +1,4 @@
-// This is the source code of Ashu for Desktop.
+// This is the source code of AyuGram for Desktop.
 //
 // We do not and cannot prevent the use of our code,
 // but be respectful and credit the original author.
@@ -70,7 +70,7 @@ void BuildVersionInfo(SectionBuilder &builder) {
 			.widget = object_ptr<Ui::FlatLabel>(
 				ctx.container,
 				rpl::single(
-					QString("Ashu Desktop v")
+					QString("AyuGram Desktop v")
 					+ QString::fromLatin1(AppVersionStr)),
 				st::boxTitle),
 			.align = style::al_top,
@@ -101,7 +101,7 @@ void BuildCategories(SectionBuilder &builder) {
 	builder.addSubsectionTitle(tr::ayu_CategoriesHeader());
 
 	builder.addSectionButton({
-		.title = rpl::single(QString("Ashu")),
+		.title = rpl::single(QString("AyuGram")),
 		.targetSection = AyuGhost::Id(),
 		.icon = { &st::menuIconGroupReactions },
 	});
@@ -145,10 +145,10 @@ void BuildLinks(SectionBuilder &builder) {
 		.id = u"ayu/channel"_q,
 		.title = tr::ayu_LinksChannel(),
 		.icon = { &st::menuIconChannel },
-		.label = rpl::single(QString("@ashugram")),
+		.label = rpl::single(QString("@ayugram")),
 		.onClick = [=] {
 			controller->showPeerByLink(Window::PeerByLinkInfo{
-				.usernameOrId = QString("ashugram"),
+				.usernameOrId = QString("ayugram"),
 			});
 		},
 	});
@@ -156,10 +156,10 @@ void BuildLinks(SectionBuilder &builder) {
 		.id = u"ayu/chat"_q,
 		.title = tr::ayu_LinksChats(),
 		.icon = { &st::menuIconChats },
-		.label = rpl::single(QString("@ashuchat")),
+		.label = rpl::single(QString("@ayugramchat")),
 		.onClick = [=] {
 			controller->showPeerByLink(Window::PeerByLinkInfo{
-				.usernameOrId = QString("ashugramchat"),
+				.usernameOrId = QString("ayugramchat"),
 			});
 		},
 	});
@@ -170,17 +170,17 @@ void BuildLinks(SectionBuilder &builder) {
 		.label = rpl::single(QString("Crowdin")),
 		.onClick = [=] {
 			QDesktopServices::openUrl(
-				QString("https://translate.ashugram.one"));
+				QString("https://translate.ayugram.one"));
 		},
 	});
 	builder.addButton({
 		.id = u"ayu/website"_q,
 		.title = tr::ayu_LinksDocumentation(),
 		.icon = { &st::menuIconIpAddress },
-		.label = rpl::single(QString("docs.ashugram.one")),
+		.label = rpl::single(QString("docs.ayugram.one")),
 		.onClick = [=] {
 			QDesktopServices::openUrl(
-				QString("https://docs.ashugram.one"));
+				QString("https://docs.ayugram.one"));
 		},
 	});
 

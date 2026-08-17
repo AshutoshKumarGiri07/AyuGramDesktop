@@ -1,4 +1,4 @@
-// This is the source code of Ashu for Desktop.
+// This is the source code of AyuGram for Desktop.
 //
 // We do not and cannot prevent the use of our code,
 // but be respectful and credit the original author.
@@ -357,7 +357,7 @@ void FilterUtils::publishFilters() {
 
 	QHttpPart titlePart;
 	titlePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"title\""));
-	titlePart.setBody("Ashu Filters");
+	titlePart.setBody("AyuGram Filters");
 
 	multiPart->append(contentPart);
 	multiPart->append(syntaxPart);

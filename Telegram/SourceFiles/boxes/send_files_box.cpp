@@ -75,7 +75,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtCore/QMimeData>
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ayu_settings.h"
 #include "base/unixtime.h"
 #include "ayu/utils/telegram_helpers.h"
@@ -2572,7 +2572,7 @@ Fn<void(Api::SendOptions)> SendFilesBox::sendCallback() {
 
 SendFilesBox::~SendFilesBox() = default;
 
-// Ashu files reordering
+// AyuGram files reordering
 
 bool SendFilesBox::isFileBlock(int i) const {
 	using Type = Ui::PreparedFile::Type;

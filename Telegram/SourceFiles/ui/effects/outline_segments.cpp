@@ -7,7 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "ui/effects/outline_segments.h"
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ui/ayu_userpic.h"
 
 

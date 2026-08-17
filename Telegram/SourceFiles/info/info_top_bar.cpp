@@ -29,7 +29,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_dialogs.h"
 #include "styles/style_info.h"
 
-// Ashu includes
+// AyuGram includes
 #include "ayu/ayu_settings.h"
 
 
@@ -525,7 +525,7 @@ void TopBar::updateControlsVisibility(anim::type animated) {
 }
 
 void TopBar::setStories(rpl::producer<Dialogs::Stories::Content> content) {
-	// Ashu disableStories
+	// AyuGram disableStories
 	const auto &settings = AyuSettings::getInstance();
 	if (settings.disableStories()) {
 		return;
