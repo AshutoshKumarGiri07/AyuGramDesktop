@@ -175,6 +175,7 @@ jobs:
             sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
             sed -i 's|TryExec=AyuGram|TryExec=ashu-desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
             sed -i 's|Icon=com.ayugram.desktop|Icon=com.ashu.desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
+            sed -i 's|StartupWMClass=com.ayugram.desktop|StartupWMClass=com.ashu.desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
           fi
 
           if [ -f "Telegram/Resources/art/icon512.png" ]; then
