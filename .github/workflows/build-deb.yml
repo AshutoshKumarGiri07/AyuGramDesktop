@@ -165,22 +165,13 @@ jobs:
           SCRIPT
           chmod 755 "${PKG_DIR}/DEBIAN/prerm"
 
-          if [ -f "lib/xdg/com.ayugram.desktop.desktop" ]; then
-            # Install as com.ayugram.desktop.desktop
-            cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
-            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AshuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
-            sed -i 's|TryExec=AshuGram|TryExec=ashu-desktop|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
-
-            # Also install as com.ashu.desktop.desktop for ashu-desktop package compatibility
-            cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
+          if [ -f "lib/xdg/com.ashu.desktop.desktop" ]; then
+            cp "lib/xdg/com.ashu.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
             sed -i 's|Exec=env DESKTOPINTEGRATION=1 AshuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
             sed -i 's|TryExec=AshuGram|TryExec=ashu-desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
-            sed -i 's|Icon=com.ayugram.desktop|Icon=com.ashu.desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
-            sed -i 's|StartupWMClass=com.ayugram.desktop|StartupWMClass=com.ashu.desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
           fi
 
           if [ -f "Telegram/Resources/art/icon512.png" ]; then
-            cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ayugram.desktop.png"
             cp "Telegram/Resources/art/icon512.png" "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps/com.ashu.desktop.png"
           fi
 
