@@ -1,13 +1,13 @@
 Package: ashu-desktop
-Version: 2026.08.17.0715
+Version: 2026.08.18.0623
 Architecture: amd64
 Maintainer: Ashu <support@ashu.dev>
 Depends: libc6 (>= 2.34), libgcc-s1, libstdc++6, libxcb1, libx11-6, libgl1, libglib2.0-0
-Filename: ./ashu-desktop_2026.08.17.0715_amd64.deb
-Size: 82809382
-MD5sum: 62d6d938a43ad9bddefd45e6ee73865a
-SHA1: 6cf2e29f04ab1f839498f2e0e7f3a4a66bed272c
-SHA256: b143801019203774d7d77ba3d4a0217be52e257f1b7062ee9dd320053cfcfbbb
+Filename: ./ashu-desktop_2026.08.18.0623_amd64.deb
+Size: 82831836
+MD5sum: 15baf449bfbf24ab727511c3476d7091
+SHA1: b530d95ceece6f1c77869dffd96f2167230e96b2
+SHA256: 408f2558d6f8e43e0ba3a2da086d83b16aa32a1edd5a615a67044494f256e2d3
 Section: net
 Priority: optional
 Description: Ashu Desktop client for Linux
