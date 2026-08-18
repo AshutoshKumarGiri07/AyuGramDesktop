@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component type="desktop">
-    <id>com.ayugram.desktop</id>
+    <id>com.ashu.desktop</id>
     <metadata_license>CC0-1.0</metadata_license>
     <project_license>GPL-3.0</project_license>
-    <name>AyuGram Desktop</name>
-    <summary>Desktop version of AyuGram - ToS breaking Telegram client</summary>
+    <name>AshuGram Desktop</name>
+    <summary>Ashu's fork of AyuGram Desktop - feature-packed Telegram client</summary>
     <description>
-        <p>Telegram Desktop with Ghost Mode, Anti-Recall and cool design.</p>
+        <p>Telegram Desktop with Ghost Mode, Anti-Recall and cool design. Custom fork by Ashu.</p>
     </description>
     <categories>
         <category>Network</category>
         <category>InstantMessaging</category>
     </categories>
-    <update_contact>helpdesk_at_radolyn.com</update_contact>
-    <developer_name>Radolyn Labs</developer_name>
+    <update_contact>ashu@ashu.dev</update_contact>
+    <developer_name>Ashu</developer_name>
     <url type="homepage">https://ayugram.one/</url>
     <url type="faq">https://t.me/AyuGramFAQ</url>
     <url type="bugtracker">https://t.me/ayugramchat/1262</url>
@@ -75,8 +75,8 @@
         <content_attribute id="money-gambling">none</content_attribute>
         <content_attribute id="money-advertising">moderate</content_attribute>
     </content_rating>
-    <launchable type="desktop-id">com.ayugram.desktop.desktop</launchable>
+    <launchable type="desktop-id">com.ashu.desktop.desktop</launchable>
     <provides>
-        <binary>AyuGram</binary>
+        <binary>AshuGram</binary>
     </provides>
 </component>

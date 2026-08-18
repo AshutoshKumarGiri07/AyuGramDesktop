@@ -130,16 +130,17 @@ jobs:
             "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps"
 
           BIN_PATH=""
-          for candidate in out/Release/AyuGram out/Release/Telegram out/AyuGram out/Telegram out/Release/ashu-desktop; do
+          for candidate in out/Release/AshuGram out/Release/AyuGram out/Release/Telegram out/AshuGram out/AyuGram out/Telegram out/Release/ashu-desktop; do
             [ -f "$candidate" ] && BIN_PATH="$candidate" && break
           done
-          [ -z "$BIN_PATH" ] && BIN_PATH=$(find out -type f \( -name "AyuGram" -o -name "Telegram" \) | head -n 1)
+          [ -z "$BIN_PATH" ] && BIN_PATH=$(find out -type f \( -name "AshuGram" -o -name "AyuGram" -o -name "Telegram" \) | head -n 1)
           [ -z "$BIN_PATH" ] || [ ! -f "$BIN_PATH" ] && echo "Error: binary not found" && exit 1
 
           echo "Found binary: ${BIN_PATH}"
           strip "$BIN_PATH" || true
           cp "$BIN_PATH" "${PKG_DIR}/usr/bin/ashu-desktop"
           chmod +x "${PKG_DIR}/usr/bin/ashu-desktop"
+          ln -sf ashu-desktop "${PKG_DIR}/usr/bin/AshuGram"
           ln -sf ashu-desktop "${PKG_DIR}/usr/bin/ayugram-desktop"
           ln -sf ashu-desktop "${PKG_DIR}/usr/bin/AyuGram"
 
@@ -167,13 +168,13 @@ jobs:
           if [ -f "lib/xdg/com.ayugram.desktop.desktop" ]; then
             # Install as com.ayugram.desktop.desktop
             cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
-            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
-            sed -i 's|TryExec=AyuGram|TryExec=ashu-desktop|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AshuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
+            sed -i 's|TryExec=AshuGram|TryExec=ashu-desktop|g' "${PKG_DIR}/usr/share/applications/com.ayugram.desktop.desktop"
 
             # Also install as com.ashu.desktop.desktop for ashu-desktop package compatibility
             cp "lib/xdg/com.ayugram.desktop.desktop" "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
-            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
-            sed -i 's|TryExec=AyuGram|TryExec=ashu-desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
+            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AshuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
+            sed -i 's|TryExec=AshuGram|TryExec=ashu-desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
             sed -i 's|Icon=com.ayugram.desktop|Icon=com.ashu.desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
             sed -i 's|StartupWMClass=com.ayugram.desktop|StartupWMClass=com.ashu.desktop|g' "${PKG_DIR}/usr/share/applications/com.ashu.desktop.desktop"
           fi

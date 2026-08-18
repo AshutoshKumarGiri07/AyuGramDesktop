@@ -1,13 +1,13 @@
 [Desktop Entry]
-Name=AyuGram [Ashu]
+Name=AshuGram
 Comment=Ashu's fork of AyuGram Desktop - feature-packed Telegram client
-TryExec=AyuGram
-Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U
-Icon=com.ayugram.desktop
+TryExec=AshuGram
+Exec=env DESKTOPINTEGRATION=1 AshuGram -- %U
+Icon=com.ashu.desktop
 Terminal=false
-StartupWMClass=com.ayugram.desktop
+StartupWMClass=com.ashu.desktop
 Type=Application
-Categories=Chat;Network;InstantMessaging;Qt;
+Categories=Chat;Network;InstantMessaging;Qt
 MimeType=x-scheme-handler/tg;x-scheme-handler/tonsite;
 Keywords=tg;chat;im;messaging;messenger;sms;telegram;tdesktop;
 Actions=quit;
@@ -16,6 +16,6 @@ X-GNOME-UsesNotifications=true
 X-GNOME-SingleWindow=true
 
 [Desktop Action quit]
-Exec=AyuGram -quit
-Name=Quit AyuGram [Ashu]
+Exec=AshuGram -quit
+Name=Quit AshuGram
 Icon=application-exit
