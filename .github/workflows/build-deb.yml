@@ -47,6 +47,11 @@ jobs:
           wait $DOCKER_PID
           echo "All submodules and Docker environment ready!"
 
+          # Safeguard: ensure protobuf is not required by cld3 if legacy submodule is used
+          if [ -f "cmake/external/cld3/CMakeLists.txt" ]; then
+            sed -i 's/find_package(protobuf REQUIRED CONFIG)/# find_package(protobuf REQUIRED CONFIG)/g' cmake/external/cld3/CMakeLists.txt
+          fi
+
       - name: Cache ccache objects
         uses: actions/cache@v4
         with:
@@ -55,14 +60,6 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os }}-${{ github.ref_name }}-
             ccache-${{ runner.os }}-
-
-      - name: Cache CMake build tree
-        uses: actions/cache@v4
-        with:
-          path: out
-          key: cmake-out-${{ runner.os }}-${{ hashFiles('Telegram/CMakeLists.txt', 'cmake/**') }}
-          restore-keys: |
-            cmake-out-${{ runner.os }}-
 
       - name: Configure ccache & Build
         env:
@@ -115,14 +112,17 @@ jobs:
 
       - name: Package, Release & Deploy APT
         env:
-          PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          REPO_OWNER="${GITHUB_REPOSITORY%/*}"
+          PAGES_URL="https://${REPO_OWNER}.github.io/${REPO_NAME}"
           TIMESTAMP=$(date +'%Y.%m.%d-%H%M')
           VERSION=$(date +'%Y.%m.%d.%H%M')
           TAG="v${TIMESTAMP}"
           DATE_STR=$(date +'%Y-%m-%d %H:%M:%S UTC')
           PKG_NAME="ashu-desktop_${VERSION}_amd64"
+          PKG_NAME_X64="ashu-desktop_${VERSION}_x64"
           PKG_DIR="build_deb/${PKG_NAME}"
 
           mkdir -p "${PKG_DIR}/DEBIAN" "${PKG_DIR}/usr/bin" \
@@ -190,17 +190,26 @@ jobs:
 
           dpkg-deb --build --root-owner-group "${PKG_DIR}"
           mv "build_deb/${PKG_NAME}.deb" "./${PKG_NAME}.deb"
+          cp "./${PKG_NAME}.deb" "./${PKG_NAME_X64}.deb"
 
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "pkg_file=${PKG_NAME}.deb" >> $GITHUB_OUTPUT
+          echo "pkg_file_amd64=${PKG_NAME}.deb" >> $GITHUB_OUTPUT
+          echo "pkg_file_x64=${PKG_NAME_X64}.deb" >> $GITHUB_OUTPUT
           echo "date_str=${DATE_STR}" >> $GITHUB_OUTPUT
         id: build
 
-      - name: Upload artifact
+      - name: Upload amd64 artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build.outputs.pkg_file }}
-          path: ${{ steps.build.outputs.pkg_file }}
+          name: ${{ steps.build.outputs.pkg_file_amd64 }}
+          path: ${{ steps.build.outputs.pkg_file_amd64 }}
+
+      - name: Upload x64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.pkg_file_x64 }}
+          path: ${{ steps.build.outputs.pkg_file_x64 }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -211,37 +220,63 @@ jobs:
             Automated Linux Debian package build for Ashu Desktop.
 
             - **Release Tag:** `${{ steps.build.outputs.tag }}`
-            - **Package File:** `${{ steps.build.outputs.pkg_file }}`
+            - **Package Files:**
+              - `${{ steps.build.outputs.pkg_file_amd64 }}`
+              - `${{ steps.build.outputs.pkg_file_x64 }}`
             - **Built on:** `${{ steps.build.outputs.date_str }}`
 
-            ### Install & Auto-Update
+            ### Quick Install (One-Line Command)
+            Auto-detects architecture and sets up auto-updates via APT:
             ```bash
-            sudo dpkg -i ${{ steps.build.outputs.pkg_file }}
+            curl -fsSL https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/install.sh | sudo bash
+            ```
+            Or via raw GitHub:
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/dev/install.sh | sudo bash
+            ```
+
+            ### Manual Install & Auto-Update
+            ```bash
+            sudo dpkg -i ${{ steps.build.outputs.pkg_file_amd64 }}
+            # or:
+            sudo dpkg -i ${{ steps.build.outputs.pkg_file_x64 }}
             ```
             After install, updates come through APT:
             ```bash
             sudo apt update && sudo apt upgrade
             ```
-          files: ${{ steps.build.outputs.pkg_file }}
+          files: |
+            ${{ steps.build.outputs.pkg_file_amd64 }}
+            ${{ steps.build.outputs.pkg_file_x64 }}
+            install.sh
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy APT repo to GitHub Pages
+      - name: Deploy APT repo & Installer to GitHub Pages
         run: |
           sudo apt-get install -y dpkg-dev
-          mkdir -p apt-repo
-          cp "${{ steps.build.outputs.pkg_file }}" apt-repo/
-          cd apt-repo
+          mkdir -p gh-pages-dist/apt
+          cp "${{ steps.build.outputs.pkg_file_amd64 }}" gh-pages-dist/apt/
+          cp "${{ steps.build.outputs.pkg_file_amd64 }}" gh-pages-dist/
+          cp "${{ steps.build.outputs.pkg_file_x64 }}" gh-pages-dist/
+          cd gh-pages-dist/apt
           dpkg-scanpackages --multiversion . /dev/null > Packages
           gzip -k -f Packages
           apt-ftparchive release . > Release
+          cd ../..
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          REPO_OWNER="${GITHUB_REPOSITORY%/*}"
+          cp install.sh gh-pages-dist/install.sh
+          sed -i "s|REPO_OWNER=.*|REPO_OWNER=\"${REPO_OWNER}\"|g" gh-pages-dist/install.sh
+          sed -i "s|REPO_NAME=.*|REPO_NAME=\"${REPO_NAME}\"|g" gh-pages-dist/install.sh
+          cp gh-pages-dist/install.sh gh-pages-dist/apt/install.sh
+          touch gh-pages-dist/.nojekyll
 
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./apt-repo
-          destination_dir: apt
+          publish_dir: ./gh-pages-dist
           keep_files: false
