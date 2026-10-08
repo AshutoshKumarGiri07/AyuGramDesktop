@@ -13,8 +13,8 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-REPO_OWNER="${REPO_OWNER:-AshutoshKumarGiri07}"
-REPO_NAME="${REPO_NAME:-AyuGramDesktop}"
+REPO_OWNER="AshutoshKumarGiri07"
+REPO_NAME="AyuGramDesktop"
 PAGES_URL="${PAGES_URL:-https://${REPO_OWNER}.github.io/${REPO_NAME}}"
 APT_SOURCE="/etc/apt/sources.list.d/ashu-desktop.list"
 

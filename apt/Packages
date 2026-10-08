@@ -1,13 +1,13 @@
 Package: ashu-desktop
-Version: 2026.10.08.0057
+Version: 2026.10.08.1204
 Architecture: amd64
 Maintainer: Ashu <support@ashu.dev>
 Depends: libc6 (>= 2.34), libgcc-s1, libstdc++6, libxcb1, libx11-6, libgl1, libglib2.0-0
-Filename: ./ashu-desktop_2026.10.08.0057_amd64.deb
-Size: 84202688
-MD5sum: 388ef6141e363c88ecdd451c63cc54a3
-SHA1: c3f3f723a05fc40d5f64c214c96e0b5d2ec01549
-SHA256: 65946b048cfe17eaf3fce31ccff217c8a1bb8b2bff9e0be02618cfd21d06f88a
+Filename: ./ashu-desktop_2026.10.08.1204_amd64.deb
+Size: 84202670
+MD5sum: b3789fdd44056470595f9063b0eb2e2e
+SHA1: a5ce37eb0d5727715150ac57fa4c6960f906b05b
+SHA256: a1b67b863eb683aa30d26126ad0176827d1ef906fece18bb0d15b9038d96fe8f
 Section: net
 Priority: optional
 Description: Ashu Desktop client for Linux
@@ -15,16 +15,16 @@ Description: Ashu Desktop client for Linux
  Auto-updates via APT (GitHub Pages repository).
 
 Package: ashu-desktop
-Version: 2026.10.08.0057
+Version: 2026.10.08.1204
 Architecture: arm64
 Maintainer: Ashu <support@ashu.dev>
 Depends: qemu-user | qemu-user-static, libc6:amd64, libglib2.0-0t64:amd64 | libglib2.0-0:amd64, libgtk-3-0t64:amd64 | libgtk-3-0:amd64
 Recommends: libx11-xcb1:amd64, libgl1:amd64, libpulse0:amd64, libasound2t64:amd64 | libasound2:amd64
-Filename: ./ashu-desktop_2026.10.08.0057_arm64.deb
-Size: 84206938
-MD5sum: 93c6e6a4ae4da05d0987986d5fe6a62b
-SHA1: de6cffbb074530e7c07a0e6cd8a1e2f3b237856c
-SHA256: a187cc3b67e0b94f1d32218fe845c216551489d45659f5f2f7a6a941f49a737b
+Filename: ./ashu-desktop_2026.10.08.1204_arm64.deb
+Size: 84206862
+MD5sum: 0bf62feb9ed1c7b84298e52549d55d61
+SHA1: 9962a0a5e81d87cc59f360f7b8ef33f22ecffcba
+SHA256: 916c874b4024f4e58e4312c8a996c6ad49dd9c26e97334ad7b32df8bb55511ee
 Section: net
 Priority: optional
 Description: Ashu Desktop client for Linux (arm64)
