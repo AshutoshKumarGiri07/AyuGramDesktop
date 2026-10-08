@@ -123,11 +123,18 @@ jobs:
           DATE_STR=$(date +'%Y-%m-%d %H:%M:%S UTC')
           PKG_NAME="ashu-desktop_${VERSION}_amd64"
           PKG_NAME_X64="ashu-desktop_${VERSION}_x64"
+          PKG_NAME_ARM64="ashu-desktop_${VERSION}_arm64"
           PKG_DIR="build_deb/${PKG_NAME}"
+          PKG_DIR_ARM64="build_deb/${PKG_NAME_ARM64}"
 
           mkdir -p "${PKG_DIR}/DEBIAN" "${PKG_DIR}/usr/bin" \
             "${PKG_DIR}/usr/share/applications" \
             "${PKG_DIR}/usr/share/icons/hicolor/512x512/apps"
+
+          mkdir -p "${PKG_DIR_ARM64}/DEBIAN" "${PKG_DIR_ARM64}/usr/bin" \
+            "${PKG_DIR_ARM64}/usr/lib/ashu-desktop" \
+            "${PKG_DIR_ARM64}/usr/share/applications" \
+            "${PKG_DIR_ARM64}/usr/share/icons/hicolor/512x512/apps"
 
           BIN_PATH=""
           for candidate in out/Release/AshuGram out/Release/AyuGram out/Release/Telegram out/AshuGram out/AyuGram out/Telegram out/Release/ashu-desktop; do
@@ -138,6 +145,8 @@ jobs:
 
           echo "Found binary: ${BIN_PATH}"
           strip "$BIN_PATH" || true
+
+          # --- amd64 Package ---
           cp "$BIN_PATH" "${PKG_DIR}/usr/bin/ashu-desktop"
           chmod +x "${PKG_DIR}/usr/bin/ashu-desktop"
           ln -sf ashu-desktop "${PKG_DIR}/usr/bin/AshuGram"
@@ -192,10 +201,90 @@ jobs:
           mv "build_deb/${PKG_NAME}.deb" "./${PKG_NAME}.deb"
           cp "./${PKG_NAME}.deb" "./${PKG_NAME_X64}.deb"
 
+          # --- arm64 Package ---
+          cp "$BIN_PATH" "${PKG_DIR_ARM64}/usr/lib/ashu-desktop/ashu-desktop"
+          chmod 755 "${PKG_DIR_ARM64}/usr/lib/ashu-desktop/ashu-desktop"
+
+          cat > "${PKG_DIR_ARM64}/usr/bin/ashu-desktop" << 'RUNNER'
+          #!/bin/bash
+          EXEC_BIN="/usr/lib/ashu-desktop/ashu-desktop"
+          if [ ! -f "$EXEC_BIN" ]; then
+            echo "Error: Binary not found at $EXEC_BIN" >&2
+            exit 1
+          fi
+
+          if command -v qemu-x86_64 >/dev/null 2>&1; then
+            exec qemu-x86_64 "$EXEC_BIN" "$@"
+          elif command -v qemu-x86_64-static >/dev/null 2>&1; then
+            exec qemu-x86_64-static "$EXEC_BIN" "$@"
+          elif command -v box64 >/dev/null 2>&1; then
+            exec box64 "$EXEC_BIN" "$@"
+          else
+            echo "Error: No x86_64 runtime found on this ARM64 system." >&2
+            echo "Please install qemu-user: sudo apt-get install -y qemu-user" >&2
+            exit 1
+          fi
+          RUNNER
+          chmod 755 "${PKG_DIR_ARM64}/usr/bin/ashu-desktop"
+
+          ln -sf ashu-desktop "${PKG_DIR_ARM64}/usr/bin/AshuGram"
+          ln -sf ashu-desktop "${PKG_DIR_ARM64}/usr/bin/ayugram-desktop"
+          ln -sf ashu-desktop "${PKG_DIR_ARM64}/usr/bin/AyuGram"
+
+          if [ -f "lib/xdg/com.ashu.desktop.desktop" ]; then
+            cp "lib/xdg/com.ashu.desktop.desktop" "${PKG_DIR_ARM64}/usr/share/applications/com.ashu.desktop.desktop"
+            sed -i 's|Exec=env DESKTOPINTEGRATION=1 AshuGram -- %U|Exec=ashu-desktop -- %U|g' "${PKG_DIR_ARM64}/usr/share/applications/com.ashu.desktop.desktop"
+            sed -i 's|TryExec=AshuGram|TryExec=ashu-desktop|g' "${PKG_DIR_ARM64}/usr/share/applications/com.ashu.desktop.desktop"
+          fi
+
+          if [ -f "Telegram/Resources/art/icon512.png" ]; then
+            cp "Telegram/Resources/art/icon512.png" "${PKG_DIR_ARM64}/usr/share/icons/hicolor/512x512/apps/com.ashu.desktop.png"
+          fi
+
+          cat > "${PKG_DIR_ARM64}/DEBIAN/postinst" << SCRIPT
+          #!/bin/bash
+          APT_SOURCE="/etc/apt/sources.list.d/ashu-desktop.list"
+          echo "deb [trusted=yes] ${PAGES_URL}/apt ./" > "\$APT_SOURCE"
+          echo ""
+          echo "Ashu Desktop (ARM64) installed!"
+          echo "APT source added. Updates via: sudo apt update && sudo apt upgrade"
+          echo ""
+          which gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -f /usr/share/icons/hicolor || true
+          which update-desktop-database >/dev/null 2>&1 && update-desktop-database -q /usr/share/applications || true
+          SCRIPT
+          chmod 755 "${PKG_DIR_ARM64}/DEBIAN/postinst"
+
+          cat > "${PKG_DIR_ARM64}/DEBIAN/prerm" << 'SCRIPT'
+          #!/bin/bash
+          rm -f /etc/apt/sources.list.d/ashu-desktop.list
+          which gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -f /usr/share/icons/hicolor || true
+          which update-desktop-database >/dev/null 2>&1 && update-desktop-database -q /usr/share/applications || true
+          SCRIPT
+          chmod 755 "${PKG_DIR_ARM64}/DEBIAN/prerm"
+
+          {
+            echo "Package: ashu-desktop"
+            echo "Version: ${VERSION}"
+            echo "Architecture: arm64"
+            echo "Maintainer: Ashu <support@ashu.dev>"
+            echo "Section: net"
+            echo "Priority: optional"
+            echo "Depends: qemu-user | qemu-user-static, libc6:amd64, libglib2.0-0t64:amd64 | libglib2.0-0:amd64, libgtk-3-0t64:amd64 | libgtk-3-0:amd64"
+            echo "Recommends: libx11-xcb1:amd64, libgl1:amd64, libpulse0:amd64, libasound2t64:amd64 | libasound2:amd64"
+            echo "Description: Ashu Desktop client for Linux (arm64)"
+            echo " Desktop version of Ashu - feature-packed Telegram client."
+            echo " Configured to run on ARM64 using high-performance user emulation."
+            echo " Auto-updates via APT (GitHub Pages repository)."
+          } > "${PKG_DIR_ARM64}/DEBIAN/control"
+
+          dpkg-deb --build --root-owner-group "${PKG_DIR_ARM64}"
+          mv "build_deb/${PKG_NAME_ARM64}.deb" "./${PKG_NAME_ARM64}.deb"
+
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "pkg_file=${PKG_NAME}.deb" >> $GITHUB_OUTPUT
           echo "pkg_file_amd64=${PKG_NAME}.deb" >> $GITHUB_OUTPUT
           echo "pkg_file_x64=${PKG_NAME_X64}.deb" >> $GITHUB_OUTPUT
+          echo "pkg_file_arm64=${PKG_NAME_ARM64}.deb" >> $GITHUB_OUTPUT
           echo "date_str=${DATE_STR}" >> $GITHUB_OUTPUT
         id: build
 
@@ -211,6 +300,12 @@ jobs:
           name: ${{ steps.build.outputs.pkg_file_x64 }}
           path: ${{ steps.build.outputs.pkg_file_x64 }}
 
+      - name: Upload arm64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.pkg_file_arm64 }}
+          path: ${{ steps.build.outputs.pkg_file_arm64 }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -222,11 +317,12 @@ jobs:
             - **Release Tag:** `${{ steps.build.outputs.tag }}`
             - **Package Files:**
               - `${{ steps.build.outputs.pkg_file_amd64 }}`
+              - `${{ steps.build.outputs.pkg_file_arm64 }}`
               - `${{ steps.build.outputs.pkg_file_x64 }}`
             - **Built on:** `${{ steps.build.outputs.date_str }}`
 
             ### Quick Install (One-Line Command)
-            Auto-detects architecture and sets up auto-updates via APT:
+            Auto-detects architecture (amd64 / arm64) and sets up auto-updates via APT:
             ```bash
             curl -fsSL https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/install.sh | sudo bash
             ```
@@ -238,8 +334,8 @@ jobs:
             ### Manual Install & Auto-Update
             ```bash
             sudo dpkg -i ${{ steps.build.outputs.pkg_file_amd64 }}
-            # or:
-            sudo dpkg -i ${{ steps.build.outputs.pkg_file_x64 }}
+            # or on ARM64:
+            sudo dpkg -i ${{ steps.build.outputs.pkg_file_arm64 }}
             ```
             After install, updates come through APT:
             ```bash
@@ -247,6 +343,7 @@ jobs:
             ```
           files: |
             ${{ steps.build.outputs.pkg_file_amd64 }}
+            ${{ steps.build.outputs.pkg_file_arm64 }}
             ${{ steps.build.outputs.pkg_file_x64 }}
             install.sh
           draft: false
@@ -256,10 +353,12 @@ jobs:
 
       - name: Deploy APT repo & Installer to GitHub Pages
         run: |
-          sudo apt-get install -y dpkg-dev
+          sudo apt-get install -y dpkg-dev apt-utils
           mkdir -p gh-pages-dist/apt
           cp "${{ steps.build.outputs.pkg_file_amd64 }}" gh-pages-dist/apt/
+          cp "${{ steps.build.outputs.pkg_file_arm64 }}" gh-pages-dist/apt/
           cp "${{ steps.build.outputs.pkg_file_amd64 }}" gh-pages-dist/
+          cp "${{ steps.build.outputs.pkg_file_arm64 }}" gh-pages-dist/
           cp "${{ steps.build.outputs.pkg_file_x64 }}" gh-pages-dist/
           cd gh-pages-dist/apt
           dpkg-scanpackages --multiversion . /dev/null > Packages
